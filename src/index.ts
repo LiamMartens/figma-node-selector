@@ -7,7 +7,7 @@ abstract class Selector {
     this.params = params;
   }
 
-  abstract when(node: cleSceneNode): boolean;
+  abstract when(node: SceneNode): boolean;
 }
 
 class AllSelector extends Selector {
@@ -28,9 +28,23 @@ class ByTypeSelector extends Selector {
 
 class ByAttributeSelector extends Selector {
   public closed: boolean = false;
+  public operator: string = '';
 
   when = (node: SceneNode): boolean => {
-    return node[this.params[0] as keyof typeof node] === this.params[1];
+    if (this.params.length < 2) return false;
+    const value = node[this.params[0] as keyof typeof node];
+    const needle = this.params[1];
+    if (this.operator === '~=')
+      return String(value).split(' ').includes(needle);
+    if (this.operator === '|=')
+      return value === needle || String(value).includes(`${needle}-`);
+    if (this.operator === '^=')
+      return String(value).startsWith(needle);
+    if (this.operator === '$=')
+      return String(value).endsWith(needle);
+    if (this.operator === '*=')
+      return String(value).includes(needle);
+    return value === this.params[1];
   };
 }
 
@@ -73,6 +87,22 @@ export function select(selector: string, node: PageNode | SceneNode) {
             nextGroup.selectors.length - 1
           ] as ByAttributeSelector
         ).closed = true;
+      } else if (
+        (token.data === '~' ||
+          token.data === '^' ||
+          token.data === '=' ||
+          token.data === '$' ||
+          token.data === '-' ||
+          token.data === '*') &&
+        nextGroup.selectors.length &&
+        nextGroup.selectors[nextGroup.selectors.length - 1] instanceof
+          ByAttributeSelector
+      ) {
+        (
+          nextGroup.selectors[
+            nextGroup.selectors.length - 1
+          ] as ByAttributeSelector
+        ).operator += token.data;
       } else if (token.data === '*') {
         nextGroup.selectors.push(new AllSelector([]));
       }
