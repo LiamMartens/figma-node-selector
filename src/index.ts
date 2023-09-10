@@ -148,12 +148,13 @@ export function select(selector: string, node: PageNode | SceneNode) {
     selectorGroups.push(nextGroup);
   }
 
-  let matches: Set<PageNode | SceneNode> = new Set([node]);
+  let matches: Set<SceneNode> = new Set([]);
   while (selectorGroups.length) {
     const group = selectorGroups.splice(0, 1)[0];
+    const currentContext = matches.size === 0 ? new Set([node]) : matches;
     if (!group.options.directChildrenOnly) {
-      const next: Set<PageNode | SceneNode> = new Set();
-      matches.forEach((node) => {
+      const next: Set<SceneNode> = new Set();
+      currentContext.forEach((node) => {
         if ('findAll' in node) {
           node
             .findAll((node) => group.selectors.every(({ when }) => when(node)))
@@ -163,7 +164,7 @@ export function select(selector: string, node: PageNode | SceneNode) {
       matches = next;
     } else if (group.options.directChildrenOnly) {
       const next: Set<SceneNode> = new Set();
-      matches.forEach((node) => {
+      currentContext.forEach((node) => {
         if ('children' in node) {
           node.children
             .filter((node) => group.selectors.every(({ when }) => when(node)))

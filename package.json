@@ -1,6 +1,6 @@
 {
   "name": "figma-node-selector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use CSS selector like syntax to select nodes",
   "keywords": ["figma", "figma plugin api", "selector"],
   "types": "lib/index.d.ts",
